@@ -66,7 +66,7 @@ jobs:
       - name: Check package and Android SDK levels
         run: |
           aapt2=$(ls $ANDROID_HOME/build-tools/*/aapt2 | tail -n1)
-          $aapt2 dump badging instagram-piko-$IG.apk | grep -E "^package:|sdkVersion|application-label:|native-code"
+          $aapt2 dump badging instagram-piko-$IG.apk | grep -iE "^package:|sdkVersion|application-label:|native-code"
 
       - uses: actions/upload-artifact@v4
         with:
