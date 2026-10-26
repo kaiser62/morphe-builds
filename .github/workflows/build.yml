@@ -1,0 +1,54 @@
+name: Build Instagram (Piko/Morphe)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ig_version:
+        description: Instagram version (must be supported by Piko patches)
+        default: 447.0.0.55.81
+      piko_tag:
+        description: Piko patches release tag (empty = latest)
+        default: ""
+      morphe_tag:
+        description: Morphe desktop release tag (empty = latest)
+        default: ""
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      IG: ${{ inputs.ig_version }}
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download tools
+        run: |
+          gh release download ${{ inputs.morphe_tag }} -R MorpheApp/morphe-desktop -p 'morphe-desktop-*-all.jar' -O morphe.jar
+          gh release download ${{ inputs.piko_tag }} -R crimera/piko -p 'patches-*.mpp' -O piko.mpp
+          gh release download -R REAndroid/APKEditor -p 'APKEditor-*.jar' -O apkeditor.jar
+          gh release download -R EFForg/apkeep -p 'apkeep-x86_64-unknown-linux-gnu' -O apkeep
+          chmod +x apkeep
+
+      - name: Download Instagram ${{ env.IG }}
+        run: |
+          mkdir -p in
+          ./apkeep -a "com.instagram.android@$IG" -d apk-pure -o arch=arm64-v8a in || ./apkeep -a "com.instagram.android@$IG" -d apk-pure in
+          ls -la in
+
+      - name: Patch
+        run: |
+          f=$(ls in/* | head -n1)
+          if ! java -jar morphe.jar patch --patches=piko.mpp -o instagram-piko-$IG.apk "$f"; then
+            echo "Direct patch failed, merging splits with APKEditor"
+            java -jar apkeditor.jar m -i "$f" -o merged.apk
+            java -jar morphe.jar patch --patches=piko.mpp -o instagram-piko-$IG.apk merged.apk
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instagram-piko-${{ env.IG }}
+          path: instagram-piko-*.apk
