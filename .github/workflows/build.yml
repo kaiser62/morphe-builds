@@ -12,6 +12,9 @@ on:
       morphe_tag:
         description: Morphe desktop release tag (empty = latest)
         default: ""
+      clone_package:
+        description: Clone package name (empty = no clone, replaces official app)
+        default: com.instagram.android.piko
 
 jobs:
   build:
@@ -50,11 +53,20 @@ jobs:
       - name: Patch
         run: |
           f=$(ls in/* | head -n1)
-          if ! java -jar morphe.jar patch --patches=piko.mpp -o instagram-piko-$IG.apk "$f"; then
+          extra=()
+          if [ -n "$CLONE" ]; then extra=(-e Clone -O "packageName=$CLONE"); fi
+          if ! java -jar morphe.jar patch --patches=piko.mpp "${extra[@]}" -o instagram-piko-$IG.apk "$f"; then
             echo "Direct patch failed, merging splits with APKEditor"
             java -jar apkeditor.jar m -i "$f" -o merged.apk
-            java -jar morphe.jar patch --patches=piko.mpp -o instagram-piko-$IG.apk merged.apk
+            java -jar morphe.jar patch --patches=piko.mpp "${extra[@]}" -o instagram-piko-$IG.apk merged.apk
           fi
+        env:
+          CLONE: ${{ inputs.clone_package }}
+
+      - name: Check package and Android SDK levels
+        run: |
+          aapt2=$(ls $ANDROID_HOME/build-tools/*/aapt2 | tail -n1)
+          $aapt2 dump badging instagram-piko-$IG.apk | grep -E "^package:|sdkVersion|application-label:|native-code"
 
       - uses: actions/upload-artifact@v4
         with:
