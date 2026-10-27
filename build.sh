@@ -19,6 +19,10 @@ dl=(-d apk-pure -o 'acknowledge_dangers=true,arch=arm64-v8a')
 ver=
 for v in ${vers:-latest}; do
   [ "$v" = latest ] && a=$pkg || a=$pkg@$v
+  # Already released? Skip before downloading anything (saves Actions minutes)
+  if [ "$v" != latest ] && gh release view "$id-v$v-${repo%%/*}-$ptag" >/dev/null 2>&1; then
+    echo "$id-v$v-${repo%%/*}-$ptag exists, skipping"; exit 0
+  fi
   # Optional official GitHub source "owner/repo:asset-glob", release tag = app version
   if [ -n "$src" ]; then
     [ "$v" = latest ] && t= || t=$v
