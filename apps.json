@@ -5,5 +5,5 @@
   { "id": "youtube-music", "pkg": "com.google.android.apps.youtube.music", "patches": "MorpheApp/morphe-patches",  "args": "" },
   { "id": "reddit",        "pkg": "com.reddit.frontpage",                "patches": "MorpheApp/morphe-patches",    "args": "" },
   { "id": "messenger",     "pkg": "com.facebook.orca",                   "patches": "rushiranpise/morphe-patches", "args": "" },
-  { "id": "protonvpn",     "pkg": "ch.protonvpn.android",                "patches": "rushiranpise/morphe-patches", "args": "" }
+  { "id": "protonvpn",     "pkg": "ch.protonvpn.android",                "patches": "rushiranpise/morphe-patches", "args": "", "src": "ProtonVPN/android-app:*-direct-release.apk" }
 ]

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Build one app. Usage: build.sh <id> <package> <patches-repo> [extra patch args]
+# Build one app. Usage: build.sh <id> <package> <patches-repo> [extra patch args] [github-source]
 # Skips if a release for the same app version + patches version already exists.
 set -euo pipefail
-id=$1 pkg=$2 repo=$3 args=${4:-}
+id=$1 pkg=$2 repo=$3 args=${4:-} src=${5:-}
 mkdir -p "work/$id/in" && cd "work/$id"
 
 ptag=$(gh release view -R "$repo" --json tagName -q .tagName)
@@ -19,7 +19,12 @@ dl=(-d apk-pure -o 'acknowledge_dangers=true,arch=arm64-v8a')
 ver=
 for v in ${vers:-latest}; do
   [ "$v" = latest ] && a=$pkg || a=$pkg@$v
-  ../../apkeep -a "$a" "${dl[@]}" in || true
+  # Optional official GitHub source "owner/repo:asset-glob", release tag = app version
+  if [ -n "$src" ]; then
+    [ "$v" = latest ] && t= || t=$v
+    gh release download $t -R "${src%%:*}" -p "${src#*:}" -D in || true
+  fi
+  ls in/* >/dev/null 2>&1 || ../../apkeep -a "$a" "${dl[@]}" in || true
   # Some apps ship one universal APK with no arch variant
   ls in/* >/dev/null 2>&1 || ../../apkeep -a "$a" -d apk-pure -o acknowledge_dangers=true in || true
   if ls in/* >/dev/null 2>&1; then ver=$v; break; fi

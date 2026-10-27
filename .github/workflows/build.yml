@@ -44,4 +44,4 @@ jobs:
           gh release download -R EFForg/apkeep -p 'apkeep-x86_64-unknown-linux-gnu' -O apkeep
           chmod +x apkeep build.sh
       - name: Build ${{ matrix.app.id }}
-        run: ./build.sh "${{ matrix.app.id }}" "${{ matrix.app.pkg }}" "${{ matrix.app.patches }}" "${{ matrix.app.args }}"
+        run: ./build.sh "${{ matrix.app.id }}" "${{ matrix.app.pkg }}" "${{ matrix.app.patches }}" "${{ matrix.app.args }}" "${{ matrix.app.src }}"
