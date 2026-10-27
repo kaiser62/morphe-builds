@@ -60,7 +60,11 @@ jobs:
         env:
           KS: ${{ secrets.KEYSTORE_B64 }}
         run: |
-          echo "$KS" | base64 -d > "$KEYSTORE"
+          # Secrets set from PowerShell may carry a BOM / CRLF; strip them
+          printf %s "$KS" | base64 -di > "$KEYSTORE"
+          pw=$(printf %s "$KEYSTORE_PASSWORD" | tr -cd 'A-Za-z0-9')
+          echo "::add-mask::$pw"
+          echo "KEYSTORE_PASSWORD=$pw" >> "$GITHUB_ENV"
           gh release download -R MorpheApp/morphe-desktop -p 'morphe-desktop-*-all.jar' -O morphe.jar
           gh release download -R REAndroid/APKEditor -p 'APKEditor-*.jar' -O apkeditor.jar
           gh release download -R EFForg/apkeep -p 'apkeep-x86_64-unknown-linux-gnu' -O apkeep
