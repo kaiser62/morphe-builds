@@ -3,7 +3,7 @@
 # Skips if a release for the same app version + patches version already exists.
 set -euo pipefail
 id=$1 pkg=$2 repo=$3 args=${4:-}
-mkdir -p "work/$id" out && cd "work/$id"
+mkdir -p "work/$id/in" && cd "work/$id"
 
 ptag=$(gh release view -R "$repo" --json tagName -q .tagName)
 gh release download "$ptag" -R "$repo" -p '*.mpp' -O patches.mpp --clobber
