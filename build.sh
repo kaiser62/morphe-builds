@@ -1,12 +1,24 @@
 #!/usr/bin/env bash
-# Build one app into dist/. Usage: build.sh <id> <package> <patches-repo> [extra patch args] [github-source]
+# Build one app into dist/. Usage: build.sh <id> <package> <patches-repo[,fallback-repo...]> [extra patch args] [github-source]
 # Reuses the APK from the previous release when app version + patches version are unchanged.
 # Writes dist/<id>.apk-name and dist/<id>.json (metadata used for release notes and state).
 set -euo pipefail
-id=$1 pkg=$2 repo=$3 args=${4:-} src=${5:-}
+id=$1 pkg=$2 repos=$3 args=${4:-} src=${5:-}
 root=$PWD
 mkdir -p "work/$id/in" dist && cd "work/$id"
 
+reuse() { # $1 = version; succeed if previous release already has this exact build
+  local key="$1|$repo|$ptag|$args"
+  [ -f "$root/prev/state.json" ] || return 1
+  [ "$(jq -r --arg i "$id" '.[$i].key // empty' "$root/prev/state.json")" = "$key" ] || return 1
+  local file; file=$(jq -r --arg i "$id" '.[$i].file' "$root/prev/state.json")
+  gh release download "$PREV_TAG" -p "$file" -D "$root/dist" --clobber || return 1
+  jq --arg i "$id" '.[$i] + {changed:false}' "$root/prev/state.json" > "$root/dist/$id.json"
+  echo "$id $1 unchanged, reusing $file from $PREV_TAG"
+}
+
+# Patch sources in preference order; fall through when none of a source's supported versions can be downloaded
+for repo in ${repos//,/ }; do
 ptag=$(gh release view -R "$repo" --json tagName -q .tagName)
 gh release download "$ptag" -R "$repo" -p '*.mpp' -O patches.mpp --clobber
 
@@ -20,16 +32,6 @@ vers=$(java -jar "$root/morphe.jar" list-patches --patches=patches.mpp -p -v -f 
   | awk -v p="$pkg" '/Package name:/ {cur=$3} /^\t\t[0-9]/ && cur==p {gsub(/[ \t]/,""); sub(/:.*/,""); print}' \
   | sort -urV)
 echo "$id: patches $repo@$ptag, supported versions: ${vers:-any}"
-
-reuse() { # $1 = version; succeed if previous release already has this exact build
-  local key="$1|$repo|$ptag|$args"
-  [ -f "$root/prev/state.json" ] || return 1
-  [ "$(jq -r --arg i "$id" '.[$i].key // empty' "$root/prev/state.json")" = "$key" ] || return 1
-  local file; file=$(jq -r --arg i "$id" '.[$i].file' "$root/prev/state.json")
-  gh release download "$PREV_TAG" -p "$file" -D "$root/dist" --clobber || return 1
-  jq --arg i "$id" '.[$i] + {changed:false}' "$root/prev/state.json" > "$root/dist/$id.json"
-  echo "$id $1 unchanged, reusing $file from $PREV_TAG"
-}
 
 # Try supported versions newest first until one downloads
 ver=
@@ -47,6 +49,9 @@ for v in ${vers:-latest}; do
   if ls in/* >/dev/null 2>&1; then ver=$v; break; fi
   echo "$a not available, trying older"
 done
+[ -n "$ver" ] && break
+echo "$repo: no supported version downloadable, trying next patch source"
+done
 f=$(ls in/* 2>/dev/null | head -n1) || true
 [ -n "$f" ] || { echo "No supported version of $pkg downloadable"; exit 1; }
 if [ "$ver" = latest ]; then
@@ -61,7 +66,7 @@ name="$id-$ver.apk"
 sign=(--keystore="$KEYSTORE" --keystore-password="$KEYSTORE_PASSWORD"
       --keystore-entry-alias=Morphe --keystore-entry-password="$KEYSTORE_PASSWORD")
 patch() { # shellcheck disable=SC2086
-  java -jar "$root/morphe.jar" patch --patches=patches.mpp $args "${sign[@]}" -o "$name" "$1" 2>&1 | tee patch.log
+  java -jar "$root/morphe.jar" patch --patches=patches.mpp --continue-on-error $args "${sign[@]}" -o "$name" "$1" 2>&1 | tee patch.log
   return "${PIPESTATUS[0]}"
 }
 if ! patch "$f"; then
