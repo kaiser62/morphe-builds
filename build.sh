@@ -20,6 +20,8 @@ ver=
 for v in ${vers:-latest}; do
   [ "$v" = latest ] && a=$pkg || a=$pkg@$v
   ../../apkeep -a "$a" "${dl[@]}" in || true
+  # Some apps ship one universal APK with no arch variant
+  ls in/* >/dev/null 2>&1 || ../../apkeep -a "$a" -d apk-pure -o acknowledge_dangers=true in || true
   if ls in/* >/dev/null 2>&1; then ver=$v; break; fi
   echo "$a not available, trying older"
 done

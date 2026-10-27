@@ -396,8 +396,8 @@
       "success": true
     },
     "createdAt": 1793043982740,
-    "usageCount": 18,
-    "lastUsedAt": 1793087935924
+    "usageCount": 22,
+    "lastUsedAt": 1793088056479
   },
   {
     "id": "pattern-1793087770920-tycp",
@@ -789,14 +789,14 @@
       0.11519499123096466,
       -0.029709504917263985
     ],
-    "confidence": 0.902,
+    "confidence": 1,
     "metadata": {
       "hook": "post-edit",
       "filePath": "D:\\Dev\\claude_ipad\\morphe\\repo\\build.sh",
       "success": true
     },
     "createdAt": 1793087770920,
-    "usageCount": 5,
-    "lastUsedAt": 1793087935924
+    "usageCount": 10,
+    "lastUsedAt": 1793088056479
   }
 ]
