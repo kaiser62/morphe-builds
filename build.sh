@@ -22,7 +22,7 @@ vers=$(java -jar "$root/morphe.jar" list-patches --patches=patches.mpp -p -v -f 
 echo "$id: patches $repo@$ptag, supported versions: ${vers:-any}"
 
 reuse() { # $1 = version; succeed if previous release already has this exact build
-  local key="$1|$repo|$ptag"
+  local key="$1|$repo|$ptag|$args"
   [ -f "$root/prev/state.json" ] || return 1
   [ "$(jq -r --arg i "$id" '.[$i].key // empty' "$root/prev/state.json")" = "$key" ] || return 1
   local file; file=$(jq -r --arg i "$id" '.[$i].file' "$root/prev/state.json")
@@ -78,9 +78,9 @@ min_sdk=$(sed -nE "s/^minSdkVersion:'([0-9]+)'.*/\1/p" <<<"$badging")
 grep -oP 'Applied: \K.*' patch.log | jq -R -s 'split("\n") | map(select(length>0))' > applied.json
 mv "$name" "$root/dist/"
 jq -n --arg id "$id" --arg pkg "$final_pkg" --arg ver "$ver" --arg repo "$repo" --arg ptag "$ptag" \
-  --arg file "$name" --arg min "$min_sdk" --slurpfile all all-patches.json --slurpfile applied applied.json \
+  --arg file "$name" --arg min "$min_sdk" --arg args "$args" --slurpfile all all-patches.json --slurpfile applied applied.json \
   '{id:$id, pkg:$pkg, ver:$ver, repo:$repo, ptag:$ptag, file:$file, minSdk:$min, changed:true,
-    key:($ver+"|"+$repo+"|"+$ptag),
+    key:($ver+"|"+$repo+"|"+$ptag+"|"+$args),
     patches:[ $applied[0][] as $n | {name:$n, desc:(first($all[0][] | select(.name==$n) | .desc) // "")} ]}' \
   > "$root/dist/$id.json"
 echo "$id $ver built with $(jq length applied.json) patches"
