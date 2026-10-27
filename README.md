@@ -9,8 +9,8 @@ Automated [Morphe](https://morphe.software)-patched Android builds, published as
 | YouTube | `com.google.android.youtube` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
 | YouTube Music | `com.google.android.apps.youtube.music` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
 | Reddit | `com.reddit.frontpage` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
-| Facebook | `com.facebook.katana` | [RookieEnough/De-Vanced](https://github.com/RookieEnough/De-Vanced) |
-| Messenger | `com.facebook.orca` | [SysAdminDoc/HushMessenger](https://github.com/SysAdminDoc/HushMessenger) |
+| Facebook | `com.facebook.katana` | [andrewliang25/morphe-patches](https://github.com/andrewliang25/morphe-patches) |
+| Messenger | `com.facebook.orca` | [SysAdminDoc/HushMessenger](https://github.com/SysAdminDoc/HushMessenger), fallback [rushiranpise](https://github.com/rushiranpise/morphe-patches) |
 | ProtonVPN | `ch.protonvpn.android` | [rushiranpise/morphe-patches](https://github.com/rushiranpise/morphe-patches) |
 
 All APKs are `arm64-v8a`. The applied patches for each app are listed in every release's notes.
@@ -24,7 +24,7 @@ All APKs are `arm64-v8a`. The applied patches for each app are listed in every r
    - downloads the latest release `.mpp` of the app's patch source;
    - reads which app versions those patches support and picks the newest one;
    - if the previous release already holds that exact app version + patch version, reuses its APK (no download, no patching);
-   - otherwise downloads the app (APKPure via [apkeep](https://github.com/EFForg/apkeep), or the vendor's own GitHub releases when `src` is set), falling back to older supported versions if the newest isn't available, then patches and signs it. A patch that fails to apply is skipped (`--continue-on-error`) and left out of the notes.
+   - otherwise downloads the app (APKPure via [apkeep](https://github.com/EFForg/apkeep), or the vendor's own GitHub releases when `src` is set), falling back to older supported versions if the newest isn't available, then patches and signs it. A patch that fails to apply is skipped (`--continue-on-error`) and left out of the notes; if more patches fail than apply, the build is rejected and the previous APK is kept.
 3. **release** – `release.sh` merges every app's result into `state.json`. If any app changed, it publishes a new release `builds-YYYY.MM.DD-HHMM` with all APKs, `state.json` and notes (version table + per-app patch list). If an app failed this run, its APK from the previous release is carried forward. If nothing changed, nothing is published.
 
 Run with **force** checked to publish even when nothing changed.

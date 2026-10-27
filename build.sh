@@ -81,6 +81,10 @@ final_pkg=$(sed -nE "s/^package: name='([^']+)'.*/\1/p" <<<"$badging")
 min_sdk=$(sed -nE "s/^minSdkVersion:'([0-9]+)'.*/\1/p" <<<"$badging")
 
 grep -oP 'Applied: \K.*' patch.log | jq -R -s 'split("\n") | map(select(length>0))' > applied.json
+failed=$(grep -c 'FAILED: ' patch.log || true)
+if [ "$failed" -gt "$(jq length applied.json)" ]; then
+  echo "::error::$id: $failed patches failed, only $(jq length applied.json) applied; not publishing"; exit 1
+fi
 mv "$name" "$root/dist/"
 jq -n --arg id "$id" --arg pkg "$final_pkg" --arg ver "$ver" --arg repo "$repo" --arg ptag "$ptag" \
   --arg file "$name" --arg min "$min_sdk" --arg args "$args" --slurpfile all all-patches.json --slurpfile applied applied.json \
