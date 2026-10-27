@@ -65,8 +65,9 @@ fi
 name="$id-$ver.apk"
 sign=(--keystore="$KEYSTORE" --keystore-password="$KEYSTORE_PASSWORD"
       --keystore-entry-alias=Morphe --keystore-entry-password="$KEYSTORE_PASSWORD")
-patch() { # shellcheck disable=SC2086
-  java -jar "$root/morphe.jar" patch --patches=patches.mpp --continue-on-error $args "${sign[@]}" -o "$name" "$1" 2>&1 | tee patch.log
+eval "extra=($args)"  # args from apps.json; quotes allowed, e.g. -d 'Patch name'
+patch() {
+  java -jar "$root/morphe.jar" patch --patches=patches.mpp --continue-on-error "${extra[@]}" "${sign[@]}" -o "$name" "$1" 2>&1 | tee patch.log
   return "${PIPESTATUS[0]}"
 }
 if ! patch "$f"; then
