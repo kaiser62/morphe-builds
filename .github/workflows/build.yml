@@ -5,22 +5,39 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
-      only:
-        description: Build only this app id (empty = all)
-        default: ""
+      force:
+        description: Publish a release even if nothing changed
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+
+concurrency:
+  group: morphe-builds
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
       apps: ${{ steps.m.outputs.apps }}
+      prev: ${{ steps.p.outputs.prev }}
     steps:
       - uses: actions/checkout@v5
       - id: m
-        run: echo "apps=$(jq -c --arg o '${{ inputs.only }}' 'map(select($o == "" or .id == $o))' apps.json)" >> "$GITHUB_OUTPUT"
+        run: echo "apps=$(jq -c . apps.json)" >> "$GITHUB_OUTPUT"
+      - id: p
+        name: Find previous combined release
+        run: echo "prev=$(gh release list --json tagName -q '[.[] | select(.tagName | startswith("builds-"))][0].tagName // ""')" >> "$GITHUB_OUTPUT"
+      - name: Check signing key
+        env:
+          KS: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          [ -n "$KS" ] || { echo "::error::Secret KEYSTORE_B64 missing. Run setup-keystore.ps1 once."; exit 1; }
 
   build:
     needs: setup
@@ -30,18 +47,49 @@ jobs:
       matrix:
         app: ${{ fromJson(needs.setup.outputs.apps) }}
     env:
-      GH_TOKEN: ${{ github.token }}
+      PREV_TAG: ${{ needs.setup.outputs.prev }}
+      KEYSTORE: ${{ github.workspace }}/morphe.keystore
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
-      - name: Download tools
+      - name: Prepare tools, key and previous state
+        env:
+          KS: ${{ secrets.KEYSTORE_B64 }}
         run: |
+          echo "$KS" | base64 -d > "$KEYSTORE"
           gh release download -R MorpheApp/morphe-desktop -p 'morphe-desktop-*-all.jar' -O morphe.jar
           gh release download -R REAndroid/APKEditor -p 'APKEditor-*.jar' -O apkeditor.jar
           gh release download -R EFForg/apkeep -p 'apkeep-x86_64-unknown-linux-gnu' -O apkeep
           chmod +x apkeep build.sh
+          mkdir -p prev
+          [ -z "$PREV_TAG" ] || gh release download "$PREV_TAG" -p state.json -D prev || true
       - name: Build ${{ matrix.app.id }}
         run: ./build.sh "${{ matrix.app.id }}" "${{ matrix.app.pkg }}" "${{ matrix.app.patches }}" "${{ matrix.app.args }}" "${{ matrix.app.src }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.app.id }}
+          path: dist/
+          retention-days: 3
+
+  release:
+    needs: [setup, build]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+      - name: Publish combined release
+        env:
+          FORCE: ${{ inputs.force }}
+          PREV_TAG: ${{ needs.setup.outputs.prev }}
+        run: |
+          ls dist/*.json >/dev/null 2>&1 || { echo "No successful builds"; exit 1; }
+          bash release.sh
