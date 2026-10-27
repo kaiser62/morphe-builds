@@ -4,7 +4,7 @@ set -euo pipefail
 cd dist
 # Carry forward apps whose build failed this run, so the release always has every app
 if [ -n "${PREV_TAG:-}" ] && gh release download "$PREV_TAG" -p state.json -O prev-state.json 2>/dev/null; then
-  for i in $(jq -r 'keys[]' prev-state.json); do
+  for i in $(jq -r --slurpfile a ../apps.json 'keys[] | select(. as $k | $a[0] | map(.id) | index($k))' prev-state.json); do
     [ -f "$i.json" ] && continue
     echo "$i failed this run, carrying forward from $PREV_TAG"
     jq --arg i "$i" '.[$i] + {changed:false}' prev-state.json > "$i.json"

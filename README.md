@@ -9,7 +9,6 @@ Automated [Morphe](https://morphe.software)-patched Android builds, published as
 | YouTube | `com.google.android.youtube` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
 | YouTube Music | `com.google.android.apps.youtube.music` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
 | Reddit | `com.reddit.frontpage` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
-| Facebook | `com.facebook.katana` | [andrewliang25/morphe-patches](https://github.com/andrewliang25/morphe-patches) |
 | Messenger | `com.facebook.orca` | [SysAdminDoc/HushMessenger](https://github.com/SysAdminDoc/HushMessenger), fallback [rushiranpise](https://github.com/rushiranpise/morphe-patches) |
 | ProtonVPN | `ch.protonvpn.android` | [rushiranpise/morphe-patches](https://github.com/rushiranpise/morphe-patches) |
 
@@ -39,7 +38,7 @@ Use [Obtainium](https://github.com/ImranR98/Obtainium):
 
 1. Settings → add a GitHub personal access token (repo is private).
 2. Add app → `https://github.com/kaiser62/morphe-builds`, set **Filter APKs by regular expression**, e.g. `^instagram-.*\.apk$`.
-3. Repeat per app (`twitter-`, `youtube-`, `youtube-music-`, `reddit-`, `facebook-`, `messenger-`, `protonvpn-`).
+3. Repeat per app (`twitter-`, `youtube-`, `youtube-music-`, `reddit-`, `messenger-`, `protonvpn-`).
 
 YouTube / YouTube Music need [MicroG-RE](https://github.com/MorpheApp/MicroG-RE) installed for Google sign-in.
 
@@ -56,3 +55,7 @@ Add a line to `apps.json`:
 - `src` – optional `owner/repo:asset-glob` to download the app from the vendor's GitHub releases (release tag = app version) instead of APKPure.
 
 Patch sources can be found at [morphe-patches.software](https://morphe-patches.software/#apps).
+
+## Not included
+
+Facebook (`com.facebook.katana`): both Facebook patch sources (andrewliang25, RookieEnough/De-Vanced) apply only 2 of 15 patches to the APKPure bundle, which differs from the APKMirror build they target. Re-add once a downloadable build matches.
