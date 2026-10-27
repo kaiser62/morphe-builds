@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Build one app into dist/. Usage: build.sh <id> <package> <patches-repo[,fallback-repo...]> [extra patch args] [github-source]
+# Build one app into dist/. Usage: build.sh <id> <package> <patches-repo[,fallback-repo...]> [extra patch args] [github-source] [arch|any]
 # Reuses the APK from the previous release when app version + patches version are unchanged.
 # Writes dist/<id>.apk-name and dist/<id>.json (metadata used for release notes and state).
 set -euo pipefail
-id=$1 pkg=$2 repos=$3 args=${4:-} src=${5:-}
+id=$1 pkg=$2 repos=$3 args=${4:-} src=${5:-} arch=${6:-arm64-v8a}
 root=$PWD
 mkdir -p "work/$id/in" dist && cd "work/$id"
 
@@ -43,7 +43,7 @@ for v in ${vers:-latest}; do
     [ "$v" = latest ] && t= || t=$v
     gh release download $t -R "${src%%:*}" -p "${src#*:}" -D in || true
   fi
-  ls in/* >/dev/null 2>&1 || "$root/apkeep" -a "$a" -d apk-pure -o 'acknowledge_dangers=true,arch=arm64-v8a' in || true
+  [ "$arch" = any ] || { ls in/* >/dev/null 2>&1 || "$root/apkeep" -a "$a" -d apk-pure -o "acknowledge_dangers=true,arch=$arch" in || true; }
   # Some apps ship one universal APK with no arch variant
   ls in/* >/dev/null 2>&1 || "$root/apkeep" -a "$a" -d apk-pure -o acknowledge_dangers=true in || true
   if ls in/* >/dev/null 2>&1; then ver=$v; break; fi

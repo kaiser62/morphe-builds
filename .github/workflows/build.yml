@@ -72,7 +72,7 @@ jobs:
           mkdir -p prev
           [ -z "$PREV_TAG" ] || gh release download "$PREV_TAG" -p state.json -D prev || true
       - name: Build ${{ matrix.app.id }}
-        run: ./build.sh "${{ matrix.app.id }}" "${{ matrix.app.pkg }}" "${{ matrix.app.patches }}" "${{ matrix.app.args }}" "${{ matrix.app.src }}"
+        run: ./build.sh "${{ matrix.app.id }}" "${{ matrix.app.pkg }}" "${{ matrix.app.patches }}" "${{ matrix.app.args }}" "${{ matrix.app.src }}" "${{ matrix.app.arch }}"
       - uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.app.id }}
