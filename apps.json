@@ -6,5 +6,5 @@
   { "id": "reddit",        "pkg": "com.reddit.frontpage",                  "patches": "MorpheApp/morphe-patches",  "args": "" },
   { "id": "facebook",      "pkg": "com.facebook.katana",                   "patches": "RookieEnough/De-Vanced",    "args": "" },
   { "id": "messenger",     "pkg": "com.facebook.orca",                     "patches": "SysAdminDoc/HushMessenger", "args": "" },
-  { "id": "protonvpn",     "pkg": "ch.protonvpn.android",                  "patches": "hoo-dles/morphe-patches",   "args": "", "src": "ProtonVPN/android-app:*-direct-release.apk" }
+  { "id": "protonvpn",     "pkg": "ch.protonvpn.android",                  "patches": "rushiranpise/morphe-patches", "args": "", "src": "ProtonVPN/android-app:*-direct-release.apk" }
 ]
