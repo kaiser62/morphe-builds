@@ -10,6 +10,7 @@ Automated [Morphe](https://morphe.software)-patched Android builds, published as
 | YouTube Music | `com.google.android.apps.youtube.music` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
 | Reddit | `com.reddit.frontpage` | [MorpheApp/morphe-patches](https://github.com/MorpheApp/morphe-patches) |
 | Messenger | `com.facebook.orca` | [SysAdminDoc/HushMessenger](https://github.com/SysAdminDoc/HushMessenger), fallback [rushiranpise](https://github.com/rushiranpise/morphe-patches) |
+| Lightroom | `com.adobe.lrmobile` | [mich111discord/MightyMichs-Patches](https://github.com/mich111discord/MightyMichs-Patches) |
 | ProtonVPN | `ch.protonvpn.android` | [rushiranpise/morphe-patches](https://github.com/rushiranpise/morphe-patches) |
 
 All APKs are `arm64-v8a`. The applied patches for each app are listed in every release's notes.
@@ -38,7 +39,7 @@ Use [Obtainium](https://github.com/ImranR98/Obtainium):
 
 1. Settings → add a GitHub personal access token (repo is private).
 2. Add app → `https://github.com/kaiser62/morphe-builds`, set **Filter APKs by regular expression**, e.g. `^instagram-.*\.apk$`.
-3. Repeat per app (`twitter-`, `youtube-`, `youtube-music-`, `reddit-`, `messenger-`, `protonvpn-`).
+3. Repeat per app (`twitter-`, `youtube-`, `youtube-music-`, `reddit-`, `messenger-`, `protonvpn-`, `lightroom-`).
 
 YouTube / YouTube Music need [MicroG-RE](https://github.com/MorpheApp/MicroG-RE) installed for Google sign-in.
 

@@ -5,6 +5,15 @@
 set -euo pipefail
 id=$1 pkg=$2 repos=$3 args=${4:-} src=${5:-} arch=${6:-arm64-v8a}
 root=$PWD
+# Try each patch source as its own full build: one whose patches all fail on the app must fall through to the next
+if [[ $repos == *,* && -z ${BUILD_SINGLE:-} ]]; then
+  for r in ${repos//,/ }; do
+    BUILD_SINGLE=1 "$0" "$id" "$pkg" "$r" "$args" "$src" "$arch" && exit 0
+    echo "$id: patch source $r failed, trying next"
+  done
+  exit 1
+fi
+rm -rf "work/$id"
 mkdir -p "work/$id/in" dist && cd "work/$id"
 
 reuse() { # $1 = version; succeed if previous release already has this exact build
@@ -81,7 +90,7 @@ badging=$("$aapt2" dump badging "$name")
 final_pkg=$(sed -nE "s/^package: name='([^']+)'.*/\1/p" <<<"$badging")
 min_sdk=$(sed -nE "s/^minSdkVersion:'([0-9]+)'.*/\1/p" <<<"$badging")
 
-grep -oP 'Applied: \K.*' patch.log | jq -R -s 'split("\n") | map(select(length>0))' > applied.json
+{ grep -oP 'Applied: \K.*' patch.log || true; } | jq -R -s 'split("\n") | map(select(length>0))' > applied.json
 failed=$(grep -c 'FAILED: ' patch.log || true)
 if [ "$failed" -gt "$(jq length applied.json)" ]; then
   echo "::error::$id: $failed patches failed, only $(jq length applied.json) applied; not publishing"; exit 1
